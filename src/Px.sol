@@ -294,21 +294,25 @@ contract Px is Ownable {
             if (isWeth) {
                 IVault(vault).moveOut(weth, treasury, fee_);
                 ITreasury(treasury).swapTokens(weth, usdc, fee_);
-                IVault(vault).moveOut(weth, msg.sender, exitSize_);
+                IVault(vault).moveOut(weth, address(this), exitSize_);
+                wethBalances[msg.sender] += exitSize_;
             } else {
                 IVault(vault).moveOut(usdc, treasury, fee_);
-                IVault(vault).moveOut(usdc, msg.sender, exitSize_);
+                IVault(vault).moveOut(usdc, address(this), exitSize_);
+                usdcBalances[msg.sender] += exitSize_;
             }
             IVault(vault).moveOut(weth, treasury, amountOut);
             ITreasury(treasury).swapTokens(weth, usdc, amountOut);
         } else {
             if (isWeth) {
                 IVault(vault).moveOut(weth, treasury, fee_);
-                IVault(vault).moveOut(weth, msg.sender, exitSize_);
+                IVault(vault).moveOut(weth, address(this), exitSize_);
+                wethBalances[msg.sender] += exitSize_;
             } else {
                 IVault(vault).moveOut(usdc, treasury, fee_);
                 ITreasury(treasury).swapTokens(usdc, weth, fee_);
-                IVault(vault).moveOut(usdc, msg.sender, exitSize_);
+                IVault(vault).moveOut(usdc, address(this), exitSize_);
+                usdcBalances[msg.sender] += exitSize_;
             }
             IVault(vault).moveOut(usdc, treasury, amountOut);
             ITreasury(treasury).swapTokens(usdc, weth, amountOut);
