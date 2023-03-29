@@ -1,5 +1,5 @@
 
-![Chart](https://user-images.githubusercontent.com/26146738/228552866-b87d25d8-3336-4726-8120-285a76d22dd7.png)
+![Perp](https://user-images.githubusercontent.com/26146738/228555549-fae16a0c-b178-43f3-9ea8-67f597ee746f.png)
 
 ### Deployments
 
