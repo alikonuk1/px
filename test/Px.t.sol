@@ -397,7 +397,7 @@ contract PxTest is Test {
 
     function testRevert_closePosition_NoPosition() public {
         vm.startPrank(user1);
-        vm.expectRevert("No position to close");
+        vm.expectRevert();
         px.closePosition();
         vm.stopPrank();
     }

@@ -6,10 +6,11 @@ import {Ownable} from "./utils/Ownable.sol";
 import {IProxy} from "./interfaces/IProxy.sol";
 import {IERC20} from "./interfaces/IERC20.sol";
 import {IVault} from "./interfaces/IVault.sol";
+import {IErrors} from "./interfaces/IErrors.sol";
 import {ITreasury} from "./interfaces/ITreasury.sol";
 
 contract Px is Ownable {
-    
+
     /////////////////////////////////////////////
     //                 Events
     /////////////////////////////////////////////
@@ -74,7 +75,9 @@ contract Px is Ownable {
     }
 
     function _nonReentrantBefore() internal {
-        require(mutex == 1, "lol!");
+        if(mutex != 1){
+            revert IErrors.REENTRANCY();
+        }
         mutex = 2;
     }
 
@@ -118,7 +121,9 @@ contract Px is Ownable {
     /////////////////////////////////////////////
 
     function provideLiquidity(uint256 amount, bool isWeth) external payable noReentrancy {
-        require(amount > 0.1 ether, "Non-dust value required");
+        if(amount < 0.001 ether){
+            revert IErrors.DUST();
+        }
         uint256 sharesMinted = amount;
 
         if(isWeth){
@@ -137,7 +142,9 @@ contract Px is Ownable {
     }
 
     function withdrawLiquidity(uint256 shareAmount, bool isWeth) external noReentrancy {
-        require(shareAmount > 0, "non-zero value required");
+        if(shareAmount == 0){
+            revert IErrors.ZERO();
+        }
 
         if(isWeth){
             require(shareAmount <= providerWethShares[msg.sender], "insufficient user balance");
@@ -210,8 +217,12 @@ contract Px is Ownable {
 
     function openPosition(uint256 size, bool isLong, bool isWeth, uint8 leverage) external {
         (int224 currentPrice, ) = readDataFeed();
-        require(currentPrice > 0, "Invalid price value");
-        require(leverage <= 10, "Max 10x");
+        if(currentPrice == 0){
+            revert IErrors.ZERO();
+        }
+        if(leverage >= 11){
+            revert IErrors.MAX_LEVERAGE();
+        }
 
         if(leverage == 0){
             leverage = 1;
@@ -262,7 +273,9 @@ contract Px is Ownable {
 
     function closePosition() external {
         Position storage position = positions[msg.sender];
-        require(position.size > 0, "No position to close");
+        if(position.size == 0){
+            revert IErrors.NO_POSITION();
+        }
 
         address vault = position.vault;
         bool isWeth = position.isWeth;
@@ -270,7 +283,9 @@ contract Px is Ownable {
         uint256 amountOut = position.amountOut;
 
         (int224 currentPrice, ) = readDataFeed();
-        require(currentPrice > 0, "Invalid price value");
+        if(currentPrice == 0){
+            revert IErrors.ZERO();
+        }
 
         int256 pnl = calculatePnL(position.entryPrice, currentPrice, position.size, position.isLong);
         uint256 exitSize = position.size + uint256(pnl);
@@ -313,10 +328,14 @@ contract Px is Ownable {
 
     function liquidate(address trader) external {
         Position storage position = positions[trader];
-        require(position.size > 0, "No position to liquidate");
+        if(position.size == 0){
+            revert IErrors.NO_POSITION();
+        }
 
         (int224 currentPrice, uint256 timestamp) = readDataFeed();
-        require(currentPrice > 0, "Invalid price value");
+        if(currentPrice == 0){
+            revert IErrors.ZERO();
+        }
         require(timestamp + 1 days > block.timestamp, "Timestamp older than one day");
 
         address vault = position.vault;
@@ -338,7 +357,9 @@ contract Px is Ownable {
 
         uint256 liquidationThreshold = (size * leverage) / 100;
 
-        require(sizeAfterPnL < liquidationThreshold, "Position is not under-margined");
+        if(sizeAfterPnL >= liquidationThreshold){
+            revert IErrors.NOT_UNDERMARGINED();
+        }
 
         position.size = 0;
         position.entryPrice = 0;
@@ -373,10 +394,14 @@ contract Px is Ownable {
 
     function isSolvent(address trader) public view returns (bool, uint256) {
         Position storage position = positions[trader];
-        require(position.size > 0, "No position to liquidate");
+        if(position.size == 0){
+            revert IErrors.NO_POSITION();
+        }
 
         (int224 currentPrice, uint256 timestamp) = readDataFeed();
-        require(currentPrice > 0, "Invalid price value");
+        if(currentPrice == 0){
+            revert IErrors.ZERO();
+        }
         require(timestamp + 1 days > block.timestamp, "Timestamp older than one day");
 
         bool isLong = position.isLong;
