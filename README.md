@@ -4,7 +4,7 @@
 ### Deployments
 
 #### Core Contract
-- Göerli: 0x7D32c6b17A017BC5F6887215a93b445D6DC02408
+- Göerli: 0x1ca0daaD7403609b701ACcc2a237fab815e93145
 
 #### Treasury Contract
 - Göerli: 0xeA56A438A3098d5bBEF3Bf6F4bfaE6a754c26661

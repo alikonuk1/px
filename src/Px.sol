@@ -28,14 +28,14 @@ contract Px is Ownable {
     //                 Storage
     /////////////////////////////////////////////
 
-    address public proxy;
-    address public usdc;
-    address public weth;
-    address public treasury;
     uint8 private mutex = 1;
     uint256 public fee = 3 * 10 ** 15; // 3000000000000000 = 0.3%
     uint256 public shareSupplyWeth;
     uint256 public shareSupplyUsdc;
+    address public proxy;
+    address public usdc;
+    address public weth;
+    address public treasury;
 
     /////////////////////////////////////////////
     //                 Structs
@@ -97,15 +97,21 @@ contract Px is Ownable {
     /////////////////////////////////////////////
 
     function setProxy(address proxy_) public onlyOwner {
-        proxy = proxy_;
+        assembly {
+            sstore(proxy.slot, proxy_)
+        }
     }
 
     function setTreasury(address treasury_) public onlyOwner {
-        treasury = treasury_;
+        assembly {
+            sstore(treasury.slot, treasury_)
+        }
     }
 
     function setFee(uint256 fee_) public onlyOwner {
-        fee = fee_;
+        assembly {
+            sstore(fee.slot, fee_)
+        }
     }
 
     /////////////////////////////////////////////
@@ -173,7 +179,7 @@ contract Px is Ownable {
     //               Collateral
     /////////////////////////////////////////////
 
-    function deposit(uint256 amount, bool isWeth) external {
+    function deposit(uint256 amount, bool isWeth) external noReentrancy {
         if (isWeth) {
             IERC20(weth).transferFrom(msg.sender, address(this), amount);
             wethBalances[msg.sender] += amount;
@@ -185,8 +191,15 @@ contract Px is Ownable {
         emit Deposit(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount, bool isWeth) external {
-        address token = isWeth ? weth : usdc;
+    function withdraw(uint256 amount, bool isWeth) external noReentrancy {
+        address token;
+
+        if(isWeth){
+            token = weth;
+        } else {
+            token = usdc;
+        }
+
         uint256 tokenBalance = IERC20(token).balanceOf(address(this));
         require(tokenBalance >= amount, "Insufficient contract balance");
 
@@ -206,7 +219,7 @@ contract Px is Ownable {
     //              Trading Logic
     /////////////////////////////////////////////
 
-    function openPosition(uint256 size, bool isLong, bool isWeth, uint8 leverage) external {
+    function openPosition(uint256 size, bool isLong, bool isWeth, uint8 leverage) external noReentrancy {
         (int224 currentPrice,) = readDataFeed();
         if (currentPrice == 0) {
             revert IErrors.ZERO();
@@ -262,7 +275,7 @@ contract Px is Ownable {
         emit PositionOpened(msg.sender, size, currentPrice, leverage, isLong);
     }
 
-    function closePosition() external {
+    function closePosition() external noReentrancy {
         Position storage position = positions[msg.sender];
         if (position.size == 0) {
             revert IErrors.NO_POSITION();
@@ -321,7 +334,7 @@ contract Px is Ownable {
         emit PositionClosed(msg.sender, exitSize, currentPrice);
     }
 
-    function liquidate(address trader) external {
+    function liquidate(address trader) external noReentrancy {
         Position storage position = positions[trader];
         if (position.size == 0) {
             revert IErrors.NO_POSITION();
@@ -360,6 +373,8 @@ contract Px is Ownable {
         position.entryPrice = 0;
         position.leverage = 0;
         position.isLong = false;
+        position.vault = address(0);
+        position.isWeth = false;
 
         if (isLong) {
             IVault(vault).moveOut(weth, treasury, amountOut);
