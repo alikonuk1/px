@@ -3,9 +3,7 @@ pragma solidity 0.8.18;
 
 import {IERC20} from "../../src/interfaces/IERC20.sol";
 
-
 contract MockUni {
-
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;
@@ -33,5 +31,4 @@ contract MockUni {
 
         return amountOut;
     }
-
 }

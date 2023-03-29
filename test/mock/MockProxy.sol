@@ -16,12 +16,7 @@ contract MockProxy is IProxy {
         api3ServerV1 = _api3ServerV1;
     }
 
-    function read()
-        external
-        view
-        override
-        returns (int224 value, uint32 timestamp)
-    {
+    function read() external view override returns (int224 value, uint32 timestamp) {
         (value, timestamp) = (_value, _timestamp);
     }
 

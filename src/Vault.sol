@@ -4,7 +4,6 @@ pragma solidity 0.8.18;
 import "./interfaces/IERC20.sol";
 
 contract Vault {
-
     address public px;
 
     modifier onlyPx() {
@@ -12,7 +11,7 @@ contract Vault {
         _;
     }
 
-    constructor(address px_){
+    constructor(address px_) {
         px = px_;
     }
 

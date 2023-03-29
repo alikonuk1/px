@@ -10,7 +10,6 @@ import {IErrors} from "./interfaces/IErrors.sol";
 import {ITreasury} from "./interfaces/ITreasury.sol";
 
 contract Px is Ownable {
-
     /////////////////////////////////////////////
     //                 Events
     /////////////////////////////////////////////
@@ -34,9 +33,7 @@ contract Px is Ownable {
     address public weth;
     address public treasury;
     uint8 private mutex = 1;
-    address public protocol;
     uint256 public fee = 3 * 10 ** 15; // 3000000000000000 = 0.3%
-    uint256 public protocolFee = 1 * 10 ** 15; // 1000000000000000 = 0.1%
     uint256 public shareSupplyWeth;
     uint256 public shareSupplyUsdc;
 
@@ -75,7 +72,7 @@ contract Px is Ownable {
     }
 
     function _nonReentrantBefore() internal {
-        if(mutex != 1){
+        if (mutex != 1) {
             revert IErrors.REENTRANCY();
         }
         mutex = 2;
@@ -103,17 +100,12 @@ contract Px is Ownable {
         proxy = proxy_;
     }
 
-    function setProtocol(address protocol_) public onlyOwner {
-        protocol = protocol_;
-    }
-
     function setTreasury(address treasury_) public onlyOwner {
         treasury = treasury_;
     }
 
-    function setFee(uint256 protocolFee_, uint256 providerFee_) public onlyOwner {
-        protocolFee = protocolFee_;
-        fee = protocolFee_ + providerFee_;
+    function setFee(uint256 fee_) public onlyOwner {
+        fee = fee_;
     }
 
     /////////////////////////////////////////////
@@ -121,12 +113,12 @@ contract Px is Ownable {
     /////////////////////////////////////////////
 
     function provideLiquidity(uint256 amount, bool isWeth) external payable noReentrancy {
-        if(amount < 0.001 ether){
+        if (amount < 0.001 ether) {
             revert IErrors.DUST();
         }
         uint256 sharesMinted = amount;
 
-        if(isWeth){
+        if (isWeth) {
             require(shareSupplyWeth + sharesMinted >= shareSupplyWeth, "Integer overflow detected");
             IERC20(weth).transferFrom(msg.sender, treasury, amount);
             providerWethShares[msg.sender] = providerWethShares[msg.sender] + sharesMinted;
@@ -142,11 +134,11 @@ contract Px is Ownable {
     }
 
     function withdrawLiquidity(uint256 shareAmount, bool isWeth) external noReentrancy {
-        if(shareAmount == 0){
+        if (shareAmount == 0) {
             revert IErrors.ZERO();
         }
 
-        if(isWeth){
+        if (isWeth) {
             require(shareAmount <= providerWethShares[msg.sender], "insufficient user balance");
             require(shareAmount <= shareSupplyWeth, "insufficient global supply");
 
@@ -182,8 +174,7 @@ contract Px is Ownable {
     /////////////////////////////////////////////
 
     function deposit(uint256 amount, bool isWeth) external {
-
-        if(isWeth){
+        if (isWeth) {
             IERC20(weth).transferFrom(msg.sender, address(this), amount);
             wethBalances[msg.sender] += amount;
         } else {
@@ -216,15 +207,15 @@ contract Px is Ownable {
     /////////////////////////////////////////////
 
     function openPosition(uint256 size, bool isLong, bool isWeth, uint8 leverage) external {
-        (int224 currentPrice, ) = readDataFeed();
-        if(currentPrice == 0){
+        (int224 currentPrice,) = readDataFeed();
+        if (currentPrice == 0) {
             revert IErrors.ZERO();
         }
-        if(leverage >= 11){
+        if (leverage >= 11) {
             revert IErrors.MAX_LEVERAGE();
         }
 
-        if(leverage == 0){
+        if (leverage == 0) {
             leverage = 1;
         }
 
@@ -258,7 +249,7 @@ contract Px is Ownable {
         position.isWeth = isWeth;
         position.vault = address(vault);
 
-        if(isLong){
+        if (isLong) {
             uint256 amountOut = ITreasury(treasury).swapTokens(usdc, weth, leveragedUsd);
             ITreasury(treasury).moveOut(weth, address(vault), amountOut);
             position.amountOut = amountOut;
@@ -273,7 +264,7 @@ contract Px is Ownable {
 
     function closePosition() external {
         Position storage position = positions[msg.sender];
-        if(position.size == 0){
+        if (position.size == 0) {
             revert IErrors.NO_POSITION();
         }
 
@@ -282,8 +273,8 @@ contract Px is Ownable {
         bool isLong = position.isLong;
         uint256 amountOut = position.amountOut;
 
-        (int224 currentPrice, ) = readDataFeed();
-        if(currentPrice == 0){
+        (int224 currentPrice,) = readDataFeed();
+        if (currentPrice == 0) {
             revert IErrors.ZERO();
         }
 
@@ -299,8 +290,8 @@ contract Px is Ownable {
         position.vault = address(0);
         position.isWeth = false;
 
-        if(isLong){
-            if(isWeth){
+        if (isLong) {
+            if (isWeth) {
                 IVault(vault).moveOut(weth, treasury, fee_);
                 ITreasury(treasury).swapTokens(weth, usdc, fee_);
                 IVault(vault).moveOut(weth, msg.sender, exitSize_);
@@ -311,7 +302,7 @@ contract Px is Ownable {
             IVault(vault).moveOut(weth, treasury, amountOut);
             ITreasury(treasury).swapTokens(weth, usdc, amountOut);
         } else {
-            if(isWeth){
+            if (isWeth) {
                 IVault(vault).moveOut(weth, treasury, fee_);
                 IVault(vault).moveOut(weth, msg.sender, exitSize_);
             } else {
@@ -328,12 +319,12 @@ contract Px is Ownable {
 
     function liquidate(address trader) external {
         Position storage position = positions[trader];
-        if(position.size == 0){
+        if (position.size == 0) {
             revert IErrors.NO_POSITION();
         }
 
         (int224 currentPrice, uint256 timestamp) = readDataFeed();
-        if(currentPrice == 0){
+        if (currentPrice == 0) {
             revert IErrors.ZERO();
         }
         require(timestamp + 1 days > block.timestamp, "Timestamp older than one day");
@@ -349,7 +340,7 @@ contract Px is Ownable {
 
         uint256 sizeAfterPnL;
 
-        if(pnl > 0){
+        if (pnl > 0) {
             sizeAfterPnL = size + uint256(pnl);
         } else {
             sizeAfterPnL = size - uint256(-pnl);
@@ -357,7 +348,7 @@ contract Px is Ownable {
 
         uint256 liquidationThreshold = (size * leverage) / 100;
 
-        if(sizeAfterPnL >= liquidationThreshold){
+        if (sizeAfterPnL >= liquidationThreshold) {
             revert IErrors.NOT_UNDERMARGINED();
         }
 
@@ -366,7 +357,7 @@ contract Px is Ownable {
         position.leverage = 0;
         position.isLong = false;
 
-        if(isLong){
+        if (isLong) {
             IVault(vault).moveOut(weth, treasury, amountOut);
             ITreasury(treasury).swapTokens(weth, usdc, amountOut);
         } else {
@@ -374,7 +365,7 @@ contract Px is Ownable {
             ITreasury(treasury).swapTokens(usdc, weth, amountOut);
         }
 
-        if(isWeth){
+        if (isWeth) {
             IVault(vault).moveOut(weth, msg.sender, sizeAfterPnL);
         } else {
             IVault(vault).moveOut(usdc, msg.sender, sizeAfterPnL);
@@ -383,23 +374,27 @@ contract Px is Ownable {
         emit Liquidation(msg.sender, trader, isWeth, sizeAfterPnL);
     }
 
-    function calculatePnL(int256 entryPrice, int256 exitPrice, uint256 size, bool isLong) public pure returns (int256) {
+    function calculatePnL(int256 entryPrice, int256 exitPrice, uint256 size, bool isLong)
+        public
+        pure
+        returns (int256)
+    {
         int256 priceDifference = exitPrice - entryPrice;
-        if(isLong){
-            return(priceDifference * int256(size));
+        if (isLong) {
+            return (priceDifference * int256(size));
         } else {
-            return(-priceDifference * int256(size));
+            return (-priceDifference * int256(size));
         }
     }
 
     function isSolvent(address trader) public view returns (bool, uint256) {
         Position storage position = positions[trader];
-        if(position.size == 0){
+        if (position.size == 0) {
             revert IErrors.NO_POSITION();
         }
 
         (int224 currentPrice, uint256 timestamp) = readDataFeed();
-        if(currentPrice == 0){
+        if (currentPrice == 0) {
             revert IErrors.ZERO();
         }
         require(timestamp + 1 days > block.timestamp, "Timestamp older than one day");
@@ -412,7 +407,7 @@ contract Px is Ownable {
 
         uint256 sizeAfterPnL;
 
-        if(pnl > 0){
+        if (pnl > 0) {
             sizeAfterPnL = size + uint256(pnl);
         } else {
             sizeAfterPnL = size - uint256(-pnl);
@@ -420,7 +415,7 @@ contract Px is Ownable {
 
         uint256 liquidationThreshold = (size * leverage) / 100;
 
-        if(sizeAfterPnL < liquidationThreshold){
+        if (sizeAfterPnL < liquidationThreshold) {
             return (true, 0);
         } else {
             return (false, sizeAfterPnL);

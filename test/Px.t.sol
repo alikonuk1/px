@@ -49,7 +49,7 @@ contract PxTest is Test {
         // set px address and router address on treasury
         treasury.setPx(address(px));
         treasury.setRouter(address(uni));
-        
+
         vm.stopPrank();
 
         // top up accounts with mock usdc
@@ -75,7 +75,6 @@ contract PxTest is Test {
         weth.mint(address(uni));
         weth.mint(address(uni));
         weth.mint(address(uni));
-
     }
 
     /////////////////////////////////////////////
@@ -131,10 +130,9 @@ contract PxTest is Test {
         vm.startPrank(api3ServerV1);
         proxy.mock(price, timestamp);
         vm.stopPrank();
-/*         vm.expectRevert("Value not positive");
+        /*         vm.expectRevert("Value not positive");
         px.getPrice(); */
     }
-
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //                                      Liquidity
@@ -178,10 +176,8 @@ contract PxTest is Test {
         usdc.approve(address(px), amount);
         px.provideLiquidity(amount, false);
 
-
         assertEq(usdc.balanceOf(user1), 100 ether - amount);
         assertEq(usdc.balanceOf(address(treasury)), amount);
-
 
         px.withdrawLiquidity(amount, false);
         vm.stopPrank();
@@ -196,10 +192,8 @@ contract PxTest is Test {
         weth.approve(address(px), amount);
         px.provideLiquidity(amount, true);
 
-
         assertEq(weth.balanceOf(user3), 100 ether - amount);
         assertEq(weth.balanceOf(address(treasury)), amount);
-
 
         px.withdrawLiquidity(amount, true);
         vm.stopPrank();
@@ -281,7 +275,6 @@ contract PxTest is Test {
         assertEq(weth.balanceOf(address(px)), 0);
     }
 
-
     //////////////////////////////////////////////////////////////////////////////////////////
     //                                    Trading Logic
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -290,12 +283,7 @@ contract PxTest is Test {
     //               openPosition
     /////////////////////////////////////////////
 
-    function testRevert_openPosition_NoBalance(
-        uint256 amount, 
-        bool isLong, 
-        bool isWeth, 
-        uint8 leverage
-    ) public {
+    function testRevert_openPosition_NoBalance(uint256 amount, bool isLong, bool isWeth, uint8 leverage) public {
         vm.assume(amount < 100 ether && amount > 0.001 ether);
         vm.assume(leverage <= 10);
 
@@ -305,12 +293,7 @@ contract PxTest is Test {
         vm.stopPrank();
     }
 
-    function testRevert_openPosition_OverLeverage(
-        uint256 amount, 
-        bool isLong, 
-        bool isWeth, 
-        uint8 leverage
-    ) public {
+    function testRevert_openPosition_OverLeverage(uint256 amount, bool isLong, bool isWeth, uint8 leverage) public {
         vm.assume(amount < 100 ether && amount > 0.001 ether);
         vm.assume(leverage > 10);
 
@@ -390,7 +373,7 @@ contract PxTest is Test {
         assertEq(weth.balanceOf(user3), 100 ether - amount);
         assertEq(weth.balanceOf(address(px)), 0);
     }
-// 199999999999999999999 - 199998999999999999999 = 1000000000000000000 + 1 = 1000000000000000001
+    // 199999999999999999999 - 199998999999999999999 = 1000000000000000000 + 1 = 1000000000000000001
     /////////////////////////////////////////////
     //              closePosition
     /////////////////////////////////////////////
@@ -401,5 +384,4 @@ contract PxTest is Test {
         px.closePosition();
         vm.stopPrank();
     }
-    
 }

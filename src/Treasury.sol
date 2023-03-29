@@ -6,7 +6,6 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/ISwapRouter.sol";
 
 contract Treasury is Ownable {
-
     address public px;
     address public swapRouter;
 
@@ -31,32 +30,25 @@ contract Treasury is Ownable {
         IERC20(token).transfer(to, amount);
     }
 
-
-    function swapTokens(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn
-    )
+    function swapTokens(address tokenIn, address tokenOut, uint256 amountIn)
         external
         onlyPx
         returns (uint256 amountOut)
     {
-/*         IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn); */
+        /*         IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn); */
         IERC20(tokenIn).approve(address(swapRouter), amountIn);
 
-        ISwapRouter.ExactInputSingleParams memory params =
-        ISwapRouter.ExactInputSingleParams({
-                tokenIn: tokenIn,
-                tokenOut: tokenOut,
-                fee: 3000,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: amountIn,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            fee: 3000,
+            recipient: address(this),
+            deadline: block.timestamp,
+            amountIn: amountIn,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
 
         amountOut = ISwapRouter(swapRouter).exactInputSingle(params);
     }
-
 }
