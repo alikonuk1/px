@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import "forge-std/Script.sol";
 import {Px} from "src/Px.sol";
 import {MockERC20} from "test/mock/MockERC20.sol";
+import {MockUni} from "test/mock/MockUni.sol";
 
 contract Deploy is Script {
     function run() public {
