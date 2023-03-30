@@ -14,3 +14,11 @@
 
 #### Mock WETH
 - Göerli: [0x80766F7635665e7100c527E716768A53ABda51ba](https://goerli.etherscan.io/address/0x80766F7635665e7100c527E716768A53ABda51ba#code)
+
+### Liquidator Bot
+
+On script folder, run
+
+```
+node pxLiquidator
+```
