@@ -8,4 +8,5 @@ interface IErrors {
     error NO_POSITION();
     error MAX_LEVERAGE();
     error NOT_UNDERMARGINED();
+    error OPEN_POSITION_LEFT();
 }

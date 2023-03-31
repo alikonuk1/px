@@ -455,8 +455,6 @@ contract PxTest is Test {
         assertEq(usdc.balanceOf(user1), 100 ether - 10 ether);
         assertEq(usdc.balanceOf(address(px)), 10 ether);
 
-        emit log_uint(usdc.balanceOf(address(uni)));
-
         px.openPosition(10 ether, true, false, 10);
         vm.stopPrank();
 
@@ -476,4 +474,5 @@ contract PxTest is Test {
         px.closePosition();
         vm.stopPrank();
     }
+
 }

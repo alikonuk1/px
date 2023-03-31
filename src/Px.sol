@@ -231,6 +231,10 @@ contract Px is Ownable {
         if (leverage == 0) {
             leverage = 1;
         }
+        Position storage positionCheck = positions[msg.sender];
+        if (positionCheck.size != 0) {
+            revert IErrors.OPEN_POSITION_LEFT();
+        }
 
         Vault vault = new Vault(address(this));
 
