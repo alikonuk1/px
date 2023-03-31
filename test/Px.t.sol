@@ -325,7 +325,7 @@ contract PxTest is Test {
 
     function testSuccess_openPosition(uint8 leverage) public {
         vm.assume(leverage <= 10);
-        uint256 amount = 0.01 ether; 
+        uint256 amount = 0.01 ether;
 
         // top up treasury balance with liqudity providers
         vm.startPrank(user5);
@@ -474,5 +474,4 @@ contract PxTest is Test {
         px.closePosition();
         vm.stopPrank();
     }
-
 }

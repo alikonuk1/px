@@ -11,7 +11,7 @@ contract Deploy is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-/*         MockERC20 usdc = new MockERC20( "Usdc", "USDC", 6);
+        /*         MockERC20 usdc = new MockERC20( "Usdc", "USDC", 6);
         MockERC20 weth = new MockERC20( "Weth", "WETH", 18); */
 
         Px px = new Px(

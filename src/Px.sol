@@ -194,7 +194,7 @@ contract Px is Ownable {
     function withdraw(uint256 amount, bool isWeth) external noReentrancy {
         address token;
 
-        if(isWeth){
+        if (isWeth) {
             token = weth;
         } else {
             token = usdc;
@@ -312,7 +312,6 @@ contract Px is Ownable {
             size_ = exitSize - fee_;
         }
 
-
         position.size = 0;
         position.entryPrice = 0;
         position.leverage = 0;
@@ -333,13 +332,13 @@ contract Px is Ownable {
             }
             IVault(vault).moveOut(weth, treasury, amountOut);
             uint256 amountOut_ = ITreasury(treasury).swapTokens(weth, usdc, amountOut);
-                if (pnl > 0) {
-                    pnl_ = amountOut_ - amountOut;
-                    ITreasury(treasury).moveOut(usdc, address(this), pnl_);
-                    usdcBalances[msg.sender] += pnl_;
-                } else {
-                    pnl_ = 0;
-                }
+            if (pnl > 0) {
+                pnl_ = amountOut_ - amountOut;
+                ITreasury(treasury).moveOut(usdc, address(this), pnl_);
+                usdcBalances[msg.sender] += pnl_;
+            } else {
+                pnl_ = 0;
+            }
         } else {
             if (isWeth) {
                 IVault(vault).moveOut(weth, treasury, fee_);
@@ -353,13 +352,13 @@ contract Px is Ownable {
             }
             IVault(vault).moveOut(usdc, treasury, amountOut);
             uint256 amountOut_ = ITreasury(treasury).swapTokens(usdc, weth, amountOut);
-                if (pnl > 0) {
-                    pnl_ = amountOut_ - amountOut;
-                    ITreasury(treasury).moveOut(usdc, address(this), pnl_);
-                    wethBalances[msg.sender] += pnl_;
-                } else {
-                    pnl_ = 0;
-                }
+            if (pnl > 0) {
+                pnl_ = amountOut_ - amountOut;
+                ITreasury(treasury).moveOut(usdc, address(this), pnl_);
+                wethBalances[msg.sender] += pnl_;
+            } else {
+                pnl_ = 0;
+            }
         }
 
         emit PositionClosed(msg.sender, exitSize, currentPrice);
@@ -437,11 +436,7 @@ contract Px is Ownable {
         }
     }
 
-    function calculatePnLOf(address trader)
-        public
-        view
-        returns (int256)
-    {
+    function calculatePnLOf(address trader) public view returns (int256) {
         Position storage position = positions[trader];
 
         (int224 currentPrice, uint256 timestamp) = readDataFeed();
@@ -456,7 +451,7 @@ contract Px is Ownable {
 
         int256 pnl = calculatePnL(position.entryPrice, currentPrice, size, isLong, lev);
 
-        return(pnl);
+        return (pnl);
     }
 
     function isSolvent(address trader) public view returns (bool) {

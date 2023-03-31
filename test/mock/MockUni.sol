@@ -5,7 +5,6 @@ import {IERC20} from "../../src/interfaces/IERC20.sol";
 import {IProxy} from "../../src/interfaces/IProxy.sol";
 
 contract MockUni {
-
     address public proxy;
     address public usdc;
     address public weth;
@@ -44,9 +43,9 @@ contract MockUni {
 
         // You can add your own logic here for calculating the output amount based on the input amount.
         // For simplicity, we'll just return the input amount multiplied by a fixed rate.
-        (int224 currentPrice, ) = readDataFeed();
+        (int224 currentPrice,) = readDataFeed();
         uint256 rate = uint256(int256(currentPrice));
-        if(params.tokenIn == usdc){
+        if (params.tokenIn == usdc) {
             amountOut = params.amountIn / rate;
         } else {
             amountOut = params.amountIn * rate;
