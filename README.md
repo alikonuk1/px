@@ -1,5 +1,12 @@
 Live demo: https://px-fe.vercel.app/
 
+```
+forge install
+```
+```
+forge test
+```
+
 ### Flow Overview
 
 ![Perp](https://user-images.githubusercontent.com/26146738/228555549-fae16a0c-b178-43f3-9ea8-67f597ee746f.png)
