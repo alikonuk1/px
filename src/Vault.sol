@@ -20,6 +20,7 @@ contract Vault {
     }
 
     function moveOut(address token, address to, uint256 amount) public onlyPx {
+        IERC20(token).approve(px, amount);
         IERC20(token).transfer(to, amount);
     }
 }

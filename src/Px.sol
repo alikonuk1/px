@@ -285,16 +285,29 @@ contract Px is Ownable {
         bool isWeth = position.isWeth;
         bool isLong = position.isLong;
         uint256 amountOut = position.amountOut;
+        int256 entryPrice = position.entryPrice;
+        uint256 size = position.size;
 
         (int224 currentPrice,) = readDataFeed();
         if (currentPrice == 0) {
             revert IErrors.ZERO();
         }
 
-        int256 pnl = calculatePnL(position.entryPrice, currentPrice, position.size, position.isLong);
-        uint256 exitSize = position.size + uint256(pnl);
-        uint256 fee_ = exitSize / fee;
-        uint256 exitSize_ = exitSize - fee_;
+        int256 pnl = calculatePnL(entryPrice, currentPrice, position.size, isLong, position.leverage);
+        uint256 exitSize;
+        uint256 pnl_;
+        uint256 fee_;
+        uint256 size_;
+        if (pnl > 0) {
+            exitSize = size + uint256(pnl);
+            fee_ = exitSize / fee;
+            size_ = size - fee_;
+        } else {
+            exitSize = size - uint256(-pnl);
+            fee_ = exitSize / fee;
+            size_ = exitSize - fee_;
+        }
+
 
         position.size = 0;
         position.entryPrice = 0;
@@ -307,28 +320,42 @@ contract Px is Ownable {
             if (isWeth) {
                 IVault(vault).moveOut(weth, treasury, fee_);
                 ITreasury(treasury).swapTokens(weth, usdc, fee_);
-                IVault(vault).moveOut(weth, address(this), exitSize_);
-                wethBalances[msg.sender] += exitSize_;
+                IVault(vault).moveOut(weth, address(this), size_);
+                wethBalances[msg.sender] += size_;
             } else {
                 IVault(vault).moveOut(usdc, treasury, fee_);
-                IVault(vault).moveOut(usdc, address(this), exitSize_);
-                usdcBalances[msg.sender] += exitSize_;
+                IVault(vault).moveOut(usdc, address(this), size_);
+                usdcBalances[msg.sender] += size_;
             }
             IVault(vault).moveOut(weth, treasury, amountOut);
-            ITreasury(treasury).swapTokens(weth, usdc, amountOut);
+            uint256 amountOut_ = ITreasury(treasury).swapTokens(weth, usdc, amountOut);
+                if (pnl > 0) {
+                    pnl_ = amountOut_ - amountOut;
+                    ITreasury(treasury).moveOut(usdc, address(this), pnl_);
+                    usdcBalances[msg.sender] += pnl_;
+                } else {
+                    pnl_ = 0;
+                }
         } else {
             if (isWeth) {
                 IVault(vault).moveOut(weth, treasury, fee_);
-                IVault(vault).moveOut(weth, address(this), exitSize_);
-                wethBalances[msg.sender] += exitSize_;
+                IVault(vault).moveOut(weth, address(this), size_);
+                wethBalances[msg.sender] += size_;
             } else {
                 IVault(vault).moveOut(usdc, treasury, fee_);
                 ITreasury(treasury).swapTokens(usdc, weth, fee_);
-                IVault(vault).moveOut(usdc, address(this), exitSize_);
-                usdcBalances[msg.sender] += exitSize_;
+                IVault(vault).moveOut(usdc, address(this), size_);
+                usdcBalances[msg.sender] += size_;
             }
             IVault(vault).moveOut(usdc, treasury, amountOut);
-            ITreasury(treasury).swapTokens(usdc, weth, amountOut);
+            uint256 amountOut_ = ITreasury(treasury).swapTokens(usdc, weth, amountOut);
+                if (pnl > 0) {
+                    pnl_ = amountOut_ - amountOut;
+                    ITreasury(treasury).moveOut(usdc, address(this), pnl_);
+                    wethBalances[msg.sender] += pnl_;
+                } else {
+                    pnl_ = 0;
+                }
         }
 
         emit PositionClosed(msg.sender, exitSize, currentPrice);
@@ -353,7 +380,7 @@ contract Px is Ownable {
         uint8 leverage = position.leverage;
         uint256 size = position.size;
 
-        int256 pnl = calculatePnL(position.entryPrice, currentPrice, size, isLong);
+        int256 pnl = calculatePnL(position.entryPrice, currentPrice, size, isLong, leverage);
 
         uint256 sizeAfterPnL;
 
@@ -393,20 +420,42 @@ contract Px is Ownable {
         emit Liquidation(msg.sender, trader, isWeth, sizeAfterPnL);
     }
 
-    function calculatePnL(int256 entryPrice, int256 exitPrice, uint256 size, bool isLong)
+    function calculatePnL(int256 entryPrice, int256 exitPrice, uint256 size, bool isLong, uint8 lev)
         public
         pure
         returns (int256)
     {
         int256 priceDifference = exitPrice - entryPrice;
         if (isLong) {
-            return (priceDifference * int256(size));
+            return (priceDifference * int256(size) * int8(lev));
         } else {
-            return (-priceDifference * int256(size));
+            return (-priceDifference * int256(size) * int8(lev));
         }
     }
 
-    function isSolvent(address trader) public view returns (bool, uint256) {
+    function calculatePnLOf(address trader)
+        public
+        view
+        returns (int256)
+    {
+        Position storage position = positions[trader];
+
+        (int224 currentPrice, uint256 timestamp) = readDataFeed();
+        if (currentPrice == 0) {
+            revert IErrors.ZERO();
+        }
+        require(timestamp + 1 days > block.timestamp, "Timestamp older than one day");
+
+        bool isLong = position.isLong;
+        uint8 lev = position.leverage;
+        uint256 size = position.size;
+
+        int256 pnl = calculatePnL(position.entryPrice, currentPrice, size, isLong, lev);
+
+        return(pnl);
+    }
+
+    function isSolvent(address trader) public view returns (bool) {
         Position storage position = positions[trader];
         if (position.size == 0) {
             revert IErrors.NO_POSITION();
@@ -422,7 +471,7 @@ contract Px is Ownable {
         uint8 leverage = position.leverage;
         uint256 size = position.size;
 
-        int256 pnl = calculatePnL(position.entryPrice, currentPrice, size, isLong);
+        int256 pnl = calculatePnL(position.entryPrice, currentPrice, size, isLong, leverage);
 
         uint256 sizeAfterPnL;
 
@@ -435,9 +484,9 @@ contract Px is Ownable {
         uint256 liquidationThreshold = (size * leverage) / 100;
 
         if (sizeAfterPnL < liquidationThreshold) {
-            return (true, 0);
+            return (false);
         } else {
-            return (false, sizeAfterPnL);
+            return (true);
         }
     }
 

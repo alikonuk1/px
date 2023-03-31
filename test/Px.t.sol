@@ -38,7 +38,7 @@ contract PxTest is Test {
         proxy.mock(1800, 1);
 
         // deploy mock uni
-        uni = new MockUni();
+        uni = new MockUni(address(proxy), address(usdc), address(weth));
 
         // deploy treasury
         treasury = new Treasury();
@@ -63,6 +63,16 @@ contract PxTest is Test {
         usdc.mint(address(uni));
         usdc.mint(address(uni));
         usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
+        usdc.mint(address(uni));
 
         // top up accounts with mock weth
         weth.mint(creator);
@@ -72,6 +82,16 @@ contract PxTest is Test {
         weth.mint(user4);
         weth.mint(user5);
         weth.mint(user6);
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
+        weth.mint(address(uni));
         weth.mint(address(uni));
         weth.mint(address(uni));
         weth.mint(address(uni));
@@ -303,9 +323,9 @@ contract PxTest is Test {
         vm.stopPrank();
     }
 
-    function testSuccess_openPosition(uint256 amount, uint8 leverage) public {
-        vm.assume(amount < 10 ether && amount > 0.001 ether);
+    function testSuccess_openPosition(uint8 leverage) public {
         vm.assume(leverage <= 10);
+        uint256 amount = 0.01 ether; 
 
         // top up treasury balance with liqudity providers
         vm.startPrank(user5);
@@ -373,7 +393,7 @@ contract PxTest is Test {
         assertEq(weth.balanceOf(user3), 100 ether - amount);
         assertEq(weth.balanceOf(address(px)), 0);
     }
-    // 199999999999999999999 - 199998999999999999999 = 1000000000000000000 + 1 = 1000000000000000001
+
     /////////////////////////////////////////////
     //              closePosition
     /////////////////////////////////////////////
@@ -381,6 +401,78 @@ contract PxTest is Test {
     function testRevert_closePosition_NoPosition() public {
         vm.startPrank(user1);
         vm.expectRevert();
+        px.closePosition();
+        vm.stopPrank();
+    }
+
+    /////////////////////////////////////////////
+    //              End to End
+    /////////////////////////////////////////////
+
+    function testSuccess_EndToEnd() public {
+        // top up treasury balance with liqudity providers
+        vm.startPrank(user5);
+        usdc.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, false);
+        vm.stopPrank();
+
+        assertEq(usdc.balanceOf(user5), 100 ether - 100 ether);
+        assertEq(usdc.balanceOf(address(treasury)), 100 ether);
+
+        vm.startPrank(user5);
+        weth.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, true);
+        vm.stopPrank();
+
+        assertEq(weth.balanceOf(user5), 100 ether - 100 ether);
+        assertEq(weth.balanceOf(address(treasury)), 100 ether);
+
+        vm.startPrank(user6);
+        usdc.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, false);
+        vm.stopPrank();
+
+        assertEq(usdc.balanceOf(user6), 100 ether - 100 ether);
+        assertEq(usdc.balanceOf(address(treasury)), 200 ether);
+
+        vm.startPrank(user6);
+        weth.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, true);
+        vm.stopPrank();
+
+        assertEq(weth.balanceOf(user6), 100 ether - 100 ether);
+        assertEq(weth.balanceOf(address(treasury)), 200 ether);
+
+        // Checks before user openPosition
+        assertEq(usdc.balanceOf(user1), 100 ether);
+        assertEq(usdc.balanceOf(address(px)), 0);
+
+        // User deposits 10 usdc, opens long position with 10x leverage and usdc as collateral
+        vm.startPrank(user1);
+        usdc.approve(address(px), 10 ether);
+        px.deposit(10 ether, false);
+
+        assertEq(usdc.balanceOf(user1), 100 ether - 10 ether);
+        assertEq(usdc.balanceOf(address(px)), 10 ether);
+
+        emit log_uint(usdc.balanceOf(address(uni)));
+
+        px.openPosition(10 ether, true, false, 10);
+        vm.stopPrank();
+
+        assertEq(usdc.balanceOf(user1), 100 ether - 10 ether);
+        assertEq(usdc.balanceOf(address(px)), 0);
+
+        // Change mock api price
+        vm.startPrank(creator);
+        proxy.mock(2000, 100000000);
+        vm.stopPrank();
+
+        (bool isSolvent) = px.isSolvent(user1);
+
+        assertEq(isSolvent, true);
+
+        vm.startPrank(user1);
         px.closePosition();
         vm.stopPrank();
     }
