@@ -118,18 +118,21 @@ contract Px is Ownable {
     //               Liquidity
     /////////////////////////////////////////////
 
-    function provideLiquidity(uint256 amount, bool isWeth) external payable noReentrancy {
-        if (amount < 0.001 ether) {
-            revert IErrors.DUST();
-        }
+    function provideLiquidity(uint256 amount, bool isWeth) external noReentrancy {
         uint256 sharesMinted = amount;
 
         if (isWeth) {
+            if (amount < 0.001 ether) {
+                revert IErrors.DUST();
+            }
             require(shareSupplyWeth + sharesMinted >= shareSupplyWeth, "Integer overflow detected");
             IERC20(weth).transferFrom(msg.sender, treasury, amount);
             providerWethShares[msg.sender] = providerWethShares[msg.sender] + sharesMinted;
             shareSupplyWeth = shareSupplyWeth + sharesMinted;
         } else {
+            if (amount < 100000) {
+                revert IErrors.DUST();
+            }
             require(shareSupplyUsdc + sharesMinted >= shareSupplyUsdc, "Integer overflow detected");
             IERC20(usdc).transferFrom(msg.sender, treasury, amount);
             providerUsdcShares[msg.sender] = providerUsdcShares[msg.sender] + sharesMinted;
