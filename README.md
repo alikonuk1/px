@@ -6,6 +6,8 @@ Live demo: https://px-fe.vercel.app/
 
 ### Deployments
 
+Mock tokens can be minted by simply calling mint on their addresses.
+
 #### Core Contract
 - Göerli: [0x2cA55dE43F7DD43E2F99b5177ecfCf0845eBFe31](https://goerli.etherscan.io/address/0x2cA55dE43F7DD43E2F99b5177ecfCf0845eBFe31#code)
 
