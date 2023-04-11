@@ -28,11 +28,20 @@ contract Deploy is Script {
             address(weth),
             address(treasury));
 
+        /*         Px px = new Px(
+            0x94C10721Bc55E81E40E5Db92060335374F32546b, 
+            0xfC5E517AE25AdbB858fCB7BbB1971e54F2f3A6a9, 
+            0x5D96e3AaA644C59847e19DA669de9BCe74Dfbb85,
+            0xbcA610dDEa432cc2b888c4B70205a922A5F15095); */
+
         treasury.setPx(address(px));
         treasury.setRouter(address(uni));
 
-        usdc.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10**6);
-        weth.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10**18);
+        usdc.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10 ** 6);
+        weth.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10 ** 18);
+
+        usdc.mint(address(uni), 10_000 * 10 ** 6);
+        weth.mint(address(uni), 10_000 * 10 ** 18);
 
         vm.stopBroadcast();
     }

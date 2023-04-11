@@ -31,8 +31,8 @@ contract Deploy is Script {
         treasury.setPx(address(px));
         treasury.setRouter(address(uni));
 
-        usdc.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10**6);
-        weth.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10**18);
+        usdc.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10 ** 6);
+        weth.mint(0x2B68407d77B044237aE7f99369AA0347Ca44B129, 10_000 * 10 ** 18);
 
         vm.stopBroadcast();
     }

@@ -409,7 +409,7 @@ contract PxTest is Test {
     //              End to End
     /////////////////////////////////////////////
 
-    function testSuccess_EndToEnd() public {
+    function testSuccess_EndToEnd1() public {
         // top up treasury balance with liqudity providers
         vm.startPrank(user5);
         usdc.approve(address(px), 100 ether);
@@ -472,6 +472,72 @@ contract PxTest is Test {
 
         vm.startPrank(user1);
         px.closePosition();
+        vm.stopPrank();
+    }
+
+    function testSuccess_EndToEnd2() public {
+        // top up treasury balance with liqudity providers
+        vm.startPrank(user5);
+        usdc.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, false);
+        vm.stopPrank();
+
+        assertEq(usdc.balanceOf(user5), 100 ether - 100 ether);
+        assertEq(usdc.balanceOf(address(treasury)), 100 ether);
+
+        vm.startPrank(user5);
+        weth.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, true);
+        vm.stopPrank();
+
+        assertEq(weth.balanceOf(user5), 100 ether - 100 ether);
+        assertEq(weth.balanceOf(address(treasury)), 100 ether);
+
+        vm.startPrank(user6);
+        usdc.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, false);
+        vm.stopPrank();
+
+        assertEq(usdc.balanceOf(user6), 100 ether - 100 ether);
+        assertEq(usdc.balanceOf(address(treasury)), 200 ether);
+
+        vm.startPrank(user6);
+        weth.approve(address(px), 100 ether);
+        px.provideLiquidity(100 ether, true);
+        vm.stopPrank();
+
+        assertEq(weth.balanceOf(user6), 100 ether - 100 ether);
+        assertEq(weth.balanceOf(address(treasury)), 200 ether);
+
+        // Checks before user openPosition
+        assertEq(usdc.balanceOf(user1), 100 ether);
+        assertEq(usdc.balanceOf(address(px)), 0);
+
+        // User deposits 10 usdc, opens long position with 10x leverage and usdc as collateral
+        vm.startPrank(user1);
+        usdc.approve(address(px), 10 ether);
+        px.deposit(10 ether, false);
+
+        assertEq(usdc.balanceOf(user1), 100 ether - 10 ether);
+        assertEq(usdc.balanceOf(address(px)), 10 ether);
+
+        px.openPosition(10 ether, true, false, 10);
+        vm.stopPrank();
+
+        assertEq(usdc.balanceOf(user1), 100 ether - 10 ether);
+        assertEq(usdc.balanceOf(address(px)), 0);
+
+        // Change mock api price
+        vm.startPrank(creator);
+        proxy.mock(1000, 100000000);
+        vm.stopPrank();
+
+        (bool isSolvent) = px.isSolvent(user1);
+
+        assertEq(isSolvent, false);
+
+        vm.startPrank(user4);
+        px.liquidate(user1);
         vm.stopPrank();
     }
 }

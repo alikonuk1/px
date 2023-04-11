@@ -9,19 +9,19 @@ Live demo: https://px-fe.vercel.app/
 Mock tokens can be minted by simply calling mint on their addresses.
 
 #### Core Contract
-- Sepolia: [0xc9Fab05dDf7ed1126bD1a5360190c1DcEFd4A0fB](https://sepolia.etherscan.io/address/0xc9Fab05dDf7ed1126bD1a5360190c1DcEFd4A0fB#code)
+- Sepolia: [0x68d930714E78C52094045AC8Da9BC53930D9e3aA](https://sepolia.etherscan.io/address/0x68d930714E78C52094045AC8Da9BC53930D9e3aA#code)
 
 #### Treasury Contract
-- Sepolia: [0xbcA610dDEa432cc2b888c4B70205a922A5F15095](https://sepolia.etherscan.io/address/0xbcA610dDEa432cc2b888c4B70205a922A5F15095#code)
+- Sepolia: [0xD82B40b3F0A12b95Ab703ba1280612Deda12b7C9](https://sepolia.etherscan.io/address/0xD82B40b3F0A12b95Ab703ba1280612Deda12b7C9#code)
 
 #### Mock UniRouter
-- Sepolia: [0xed5e611558121A7c63F8Cd8A16a3F6EDF88c97FB](https://sepolia.etherscan.io/address/0xed5e611558121A7c63F8Cd8A16a3F6EDF88c97FB#code)
+- Sepolia: [0x5908bc79958b9341457599b7AcdD0a88377bFaB7](https://sepolia.etherscan.io/address/0x5908bc79958b9341457599b7AcdD0a88377bFaB7#code)
 
 #### Mock USDC
-- Sepolia: [0xfC5E517AE25AdbB858fCB7BbB1971e54F2f3A6a9](https://sepolia.etherscan.io/address/0xfC5E517AE25AdbB858fCB7BbB1971e54F2f3A6a9#code)
+- Sepolia: [0xE0d3EfBd042e703C9CC5DD2b630298652C863252](https://sepolia.etherscan.io/address/0xE0d3EfBd042e703C9CC5DD2b630298652C863252#code)
 
 #### Mock WETH
-- Sepolia: [0x5D96e3AaA644C59847e19DA669de9BCe74Dfbb85](https://sepolia.etherscan.io/address/0x5D96e3AaA644C59847e19DA669de9BCe74Dfbb85#code)
+- Sepolia: [0x67ECB6A6b23d7a79C74E53732Ec3f8cCa8b652ca](https://sepolia.etherscan.io/address/0x67ECB6A6b23d7a79C74E53732Ec3f8cCa8b652ca#code)
 
 ### Liquidator Bot
 
